@@ -227,4 +227,4 @@ FROM TemperatureLog;
 
 ---
 
-✅ এই নোটগুলো GitHub-এ README.md আকারে আপলোড করতে পারো।
+
