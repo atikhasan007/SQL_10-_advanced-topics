@@ -1,0 +1,380 @@
+10 Advanced SQL Concepts You Should Know
+    1. Common table expressions (CTEs)
+    2. Recursive CTEs
+    3. Temporary functions
+    4. Pivoting data with case when
+    5. Except vs. Not In
+    6. Self joins
+    7. Rank vs. dense rank vs. row number
+    8. Calculating delta values
+    9. Calculating running totals
+    10. Date-time manipulation
+
+1.  CTE (Common Table Expression) হলো একটা ছোট টেবিলের মতো কিছু, যেটা আমরা বড় একটা SQL প্রশ্নের মধ্যে একবার বানাই আর পরে বারবার ব্যবহার করি।
+কেন করি?
+    • কোড পড়তে সহজ হয়।
+যেমন, বড় একটা কাজকে ছোট ছোট অংশে ভাগ করা।
+    • একই জিনিস বারবার লিখতে হয় না।
+একবার লিখে পরে ব্যবহার করতে পারি।
+    • কোড দেখতে পরিষ্কার হয়।
+simple
+select  name, salary
+from fresher.People
+where name in (select
+ distinct name
+ from fresher.population
+ where country = "Canada" and city="Toronto")   and
+ salary >= (select 
+ avg(salary)
+ from fresher.salaries
+ where gender = "Female")
+
+CTEs
+
+
+
+with toronto_ppl as
+(select distinct name 
+from fresher.population 
+where country = "Canada" and city = "Toronto") ,
+
+avg_female_salary as
+(select 
+avg(salary) as avgSalary
+from fresher.salaries
+where gender = "Female")
+
+
+
+select 
+name,
+salary
+from fresher.People 
+where name in (select distinct name from toronto_ppl)
+and salary >= (select avgSalary from avg_female_salary)
+
+
+
+2.Recursive CTE = নিজের ওপর বারবার কাজ করা
+মানে:
+একটা কাজ করি → তারপর আবার সেই কাজ থেকে আবার একই কাজ করি → যতক্ষণ কাজ শেষ না হয়।
+
+উদাহরণ (খুব সহজ):
+তুমি তোমার পরিবারের সদস্যদের তালিকা করতে চাও।
+    • প্রথমে: তোমার বাবা-মাকে লিখো (সবচেয়ে উপরে)
+    • তারপর: বাবার বাপদাদাকে লিখো
+    • তারপর: সেই বাপদাদার বাবা (যদি থাকে)
+    • …এভাবে উপরের দিকে চলে যাও
+এটা করলে তুমি বারবার একই কাজ করবে, "এখন এই ব্যক্তির বাবা কে?"
+
+
+
+
+
+
+WITH RECURSIVE org_structure AS (
+    SELECT 
+        id,
+        manager_id
+    FROM fresher.staff_members
+    WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT
+        sm.id,
+        sm.manager_id
+    FROM fresher.staff_members sm
+    INNER JOIN org_structure os
+        ON os.id = sm.manager_id
+)
+SELECT * FROM org_structure;
+
+
+3. Temporary Functions
+Knowing how to write temporary functions is important for several reasons:
+    1. It allows you to break code down into smaller chunks.
+    2. It’s useful for writing cleaner code.
+    3. It prevents repetition and allows you to reuse code, similar to using functions in Python.
+Simple sql
+select name,
+case 
+  when tenure < 1 then "analyst"
+  when tenure between 1 and 3 then "associate" 
+  when tenure between 3 and 5 then "senior"
+  when tenure > 5 then "vp"
+  else "n/a"
+end as seniority
+from fresher.employees;
+temporary functions for big Query
+
+CREATE TEMPORARY FUNCTION get_seniority(tenure INT64) AS (
+   CASE WHEN tenure < 1 THEN "analyst"
+        WHEN tenure BETWEEN 1 and 3 THEN "associate"
+        WHEN tenure BETWEEN 3 and 5 THEN "senior"
+        WHEN tenure > 5 THEN "vp"
+        ELSE "n/a"
+   END
+);
+SELECT name
+       , get_seniority(tenure) as seniority
+FROM employees
+
+
+
+4.Pivoting data with case when
+select 
+id,
+max(case when month = 'Jan' then revenue end) as Jan_Revenue,
+max(case when month = 'Feb' then revenue end) as Feb_Revenue,
+max(case when month = 'Mar' then revenue end) as Mar_Revenue
+from fresher.sales_data
+group by id;
+
+
+
+5.Except vs. Not in
+
+EXCEPT:
+একাধিক কলামও তুলনা করতে পারে এবং ডুপ্লিকেট বাদ দিয়ে শুধু আলাদা (distinct) রেকর্ড রিটার্ন করে।
+    • NOT IN:
+শুধু একটি কলামের মান দিয়ে কাজ করে, আর ডুপ্লিকেট ফিল্টার করে না।
+২. কতগুলো কলাম তুলনা করে?
+    • EXCEPT: দুইটি কোয়েরির একই সংখ্যক কলাম থাকতে হবে।
+    • NOT IN: শুধু একটি কলামের মান তুলনা করে।
+৩. কখন ব্যবহার করো?
+    • EXCEPT: যদি তোমার টেবিল/কোয়েরিতে একাধিক কলাম থেকে সঠিক মিল না পাওয়া রেকর্ড বের করতে চাও।
+    • NOT IN: যদি শুধু একটি কলামের মান দিয়ে চেক করতে চাও, যেমন কোনো আইডি বা নাম যেটা অন্য টেবিল/কোয়েরিতে নেই।
+ধরি, আমাদের ২টি টেবিল আছে:
+    • tableA: যারা রেজিস্ট্রেশন করেছে
+    • tableB: যারা এক্সামে অংশ নিয়েছে
+আমরা জানতে চাই:
+    1. tableA তে যারা আছে কিন্তু tableB তে নেই (EXCEPT ব্যবহার করে)
+    2. tableA এর কোন id গুলো tableB তে নেই (NOT IN ব্যবহার করে)
+
+-- যারা রেজিস্ট্রেশন করেছে কিন্তু এক্সামে দেয়নি (id + name মিলিয়ে দেখা হবে)
+SELECT id, name FROM tableA
+EXCEPT
+SELECT id, name FROM tableB;
+
+
+-- tableA এর এমন id যেগুলো tableB তে নাই
+SELECT id, name FROM fresher.tableA
+WHERE id NOT IN (SELECT id FROM tableB);
+
+
+6.self joins
+select 
+a.Name as Employee
+from fresher.Employee as a  -- kormocari
+join fresher.Employee as b  -- manajer
+
+on a.ManagerId = b.id;
+where a.Salary > b.Salary;
+
+
+
+| a.Id | a.Name | a.Salary | a.ManagerId | b.Id | b.Name | b.Salary | b.ManagerId |
+| ---- | ------ | -------- | ----------- | ---- | ------ | -------- | ----------- |
+| 1    | Joe    | 70000    | 3           | 3    | Sam    | 60000    | NULL        |
+| 2    | Henry  | 80000    | 4           | 4    | Max    | 90000    | NULL        |
+7.Rank vs. Dense Rank vs. Row Number
+
+ফাংশন
+কাজ
+ব্যাখ্যা (১ লাইনে)
+RANK()
+র‍্যাঙ্কিং
+একি মানে টাই হলে একই র‍্যাঙ্ক দেয়, পরের র‍্যাঙ্ক স্কিপ করে (e.g. 1, 1, 3)।
+DENSE_RANK()
+ঘন র‍্যাঙ্ক
+একই মানে একই র‍্যাঙ্ক দেয়, কিন্তু পরের র‍্যাঙ্ক স্কিপ করে না (e.g. 1, 1, 2)।
+ROW_NUMBER()
+সারি নাম্বার
+সব রেকর্ডকে আলাদা আলাদা ধারাবাহিক নাম্বার দেয় (e.g. 1, 2, 3), টাই হলেও র‍্যান্ডমলি ভেঙে দেয়।
+select
+Name,
+Salary,
+Rank() over (order by salary desc) as Rank_,
+dense_rank() over (order by salary desc) as dense_rank_,
+row_number() over (order by salary desc) as row_number_  -- ROW_NUMBER() সবার জন্য ইউনিক সিরিয়াল দেয়।
+from fresher.Employee1;
+
+8. Calculating Delta Values
+
+🧠 কী বোঝায় Delta Value?
+Delta value মানে হলো:
+আগে এবং এখন-এর মধ্যে পার্থক্য।
+📊 যেমনঃ
+    • এই মাসে বিক্রি হলো ১৫,০০০ টাকা
+    • গত মাসে ছিল ১২,০০০ টাকা
+    • তাহলে delta = 15000 - 12000 = 3000
+👉 অর্থাৎ ৩,০০০ টাকা বেড়েছে
+
+SQL এ কীভাবে করবো?
+এর জন্য আমরা ব্যবহার করি:
+    • LAG() → আগের রেকর্ড আনতে
+    • LEAD() → পরের রেকর্ড আনতে
+
+select 
+month,
+revenue,
+lag(revenue) over(order by month) as prev_month_revenue,
+revenue - lag(revenue) over (order by month) as delta
+from fresher.monthly_sales;
+
+
+select 
+month ,
+revenue,
+lead(revenue) over(order by month) as next_month_revenue,
+revenue - lead(revenue) over(order by month ) as delta
+from fresher.monthly_sales;
+
+delta = current_value - previous_value (LAG)
+বা
+delta = next_value - current_value (LEAD)
+
+9. Calculating Running Totals
+Running Total বা Cumulative Total মানে হচ্ছে:
+প্রতিটি রো পর্যন্ত আগের সব রো এর ভ্যালুগুলোর মোট যোগফল।
+select 
+Month ,
+revenue,
+sum(revenue) over (order by month) as cumulative
+from fresher.monthly_sales;  
+
+10. Date-Time Manipulation
+-- SQL Query — Find IDs with Higher Temperature Than Previous Day
+
+by cte
+WITH tableA AS (
+    SELECT 
+        Id,
+        RecordDate,
+        Temperature,
+        LAG(Temperature) OVER (ORDER BY RecordDate) AS prev_temperature
+    FROM fresher.TemperatureLog
+),
+tableB AS (
+    SELECT 
+        Id,
+        Temperature
+    FROM fresher.TemperatureLog
+)
+SELECT 
+    a.Id,
+    a.RecordDate,
+    a.Temperature
+FROM tableA a
+JOIN tableB b ON a.Id = b.Id
+WHERE a.prev_temperature < b.Temperature;
+
+
+
+
+
+
+
+
+
+================
+
+select 
+a.Id as tableA,
+b.Id as tableB
+from fresher.TemperatureLog a,
+     fresher.TemperatureLog b
+'4', '1'
+'3', '1'
+'2', '1'
+'1', '1'
+'4', '2'
+'3', '2'
+'2', '2'
+'1', '2'
+'4', '3'
+'3', '3'
+'2', '3'
+'1', '3'
+'4', '4'
+'3', '4'
+'2', '4'
+'1', '4'
+
+
+
+
+
+
+
+
+
+select 
+a.Id as tableA,
+b.Id as tableB,
+a.Temperature as a,
+b.Temperature as b
+
+from fresher.TemperatureLog a,
+     fresher.TemperatureLog b
+     
+where a.Temperature > b.Temperature
+and datediff(a.RecordDate,b.RecordDate) = 1;
+
+===============================
+SELECT
+    Id,
+    RecordDate,
+    Temperature
+FROM (
+    SELECT
+        Id,
+        RecordDate,
+        Temperature,
+        LAG(Temperature) OVER (ORDER BY RecordDate) AS prev_temp
+    FROM TemperatureLog
+) AS sub
+WHERE Temperature > prev_temp;
+
+
+
+1. EXTRACT
+ব্যবহার: Date/time থেকে অংশ আলাদা করতে
+
+select 
+RecordDate,
+extract(year from RecordDate) as year,
+extract(month from RecordDate) as month,
+extract(day from RecordDate) as day
+from fresher.TemperatureLog;
+
+2. DATEDIFF
+ব্যবহার: দুইটি Date এর মধ্যে পার্থক্য (দিনে) বের করতে
+
+select Id,
+RecordDate,
+datediff(recordDate,'2014-01-01') as Days_from_start
+from fresher.TemperatureLog;
+
+🔸 3. DATE_ADD / DATE_SUB
+ব্যবহার: Date এর সাথে নির্দিষ্ট দিন যোগ/বিয়োগ করতে
+select 
+Id,
+RecordDate,
+date_add(RecordDate, interval 7 day ) as Plus7days,
+date_sub(RecordDate, interval 3 day) as minus3days
+from fresher.TemperatureLog;
+
+
+
+
+4. DATE_TRUNC (depends on SQL flavor: works in PostgreSQL, BigQuery)
+ব্যবহার: তারিখকে নির্দিষ্ট ইউনিটে ট্রাঙ্কেট (truncate) করা — যেমন শুধু মাস, সপ্তাহ, বছর পর্যন্ত।
+SELECT 
+    Id,
+    RecordDate,
+    DATE_TRUNC('month', RecordDate) AS MonthStart
+FROM TemperatureLog;
+
+Note: MySQL-এ DATE_TRUNC() নাই, তাই এই কাজ DATE_FORMAT() বা EXTRACT() দিয়ে করা হয়।
