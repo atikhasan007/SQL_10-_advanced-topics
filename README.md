@@ -1,5 +1,5 @@
 
-# 🔥 10 Advanced SQL Concepts You Should Know
+# 🔥 10/10 Advanced SQL Concepts You Should Know
 
 এই ডকুমেন্টটি SQL শেখার জন্য ১০টি গুরুত্বপূর্ণ ও অ্যাডভান্সড কনসেপ্ট নিয়ে তৈরি করা হয়েছে।
 প্রতিটি বিষয়ের ব্যাখ্যা বাংলা ভাষায় দেওয়া হয়েছে এবং তার পাশে ইংরেজিতে কোড ও উদাহরণ দেওয়া হয়েছে যেন সবাই বুঝতে পারে।
@@ -226,7 +226,7 @@ FROM TemperatureLog;
 ```
 
 ---
-# 📊 SQL Optimization, Data Manipulation & Transformation (2025)
+# 📊 SQL Optimization, Data Manipulation & Transformation 
 
 This project demonstrates practical SQL techniques for optimizing query performance, handling data efficiently, and transforming it for analytical purposes. Ideal for beginners to intermediate learners preparing for SQL interviews or real-world data analysis tasks.
 
