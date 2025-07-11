@@ -226,95 +226,43 @@ FROM TemperatureLog;
 ```
 
 ---
+# 📊 SQL Optimization, Data Manipulation & Transformation (2025)
 
-SQL Optimization, Data Manipulation & Transformation (2025)
-1. Query Optimization Techniques
-Optimization Strategies:
-- Indexing
-- Proper Join Strategy Selection
-- Avoiding Unnecessary Data Retrieval
--- Table Creation
-CREATE TABLE fresher.customers2 (
- customer_id INT PRIMARY KEY,
- name VARCHAR(100),
- email VARCHAR(100),
- city VARCHAR(50)
-);
--- Sample Data Insert
-INSERT INTO fresher.customers2 (customer_id, name, email, city) VALUES
-(1, 'Rahim', 'rahim@email.com', 'Dhaka'),
-(2, 'Karim', 'karim@email.com', 'Chittagong'),
-(3, 'Rafiq', 'rafiq@email.com', 'Khulna'),
-(4, 'Hasan', 'hasan@email.com', 'Dhaka'),
-(5, 'Nusrat', 'nusrat@email.com', 'Sylhet');
--- Index Creation
-CREATE INDEX idx_city ON fresher.customers2(city);
--- Query Using Index
-SELECT * FROM fresher.customers2 WHERE city = 'Dhaka';
--- Execution Plan
-EXPLAIN SELECT * FROM fresher.customers2 WHERE city = 'Dhaka';
--- Composite Index
-CREATE INDEX idx_name_city ON fresher.customers2(name, city);
-SELECT * FROM fresher.customers2 WHERE name = 'Rahim' AND city = 'Dhaka';
-2. Data Manipulation
--- Table Creation
-CREATE TABLE fresher.monthly_sales2 (
- sales_id INT PRIMARY KEY,
- sales_month VARCHAR(10),
- total_sales INT
-);
--- Sample Data Insert
-INSERT INTO fresher.monthly_sales2 (sales_id, sales_month, total_sales) VALUES
-(1, 'January', 1000),
-(2, 'February', 1200),
-(3, 'March', 900),
-(4, 'April', 1500),
-(5, 'May', 1300);
--- Window Function
-SELECT
- sales_id,
- sales_month,
- total_sales,
- LAG(total_sales) OVER (ORDER BY sales_id) AS previous_month_sales,
- total_sales - LAG(total_sales) OVER (ORDER BY sales_id) AS sales_difference
-FROM fresher.monthly_sales2;
--- CTE + Lag
-WITH sales_with_lag AS (
- SELECT *, LAG(total_sales) OVER (ORDER BY sales_id) AS prev_sales
- FROM fresher.monthly_sales2
-)
-SELECT *, total_sales - prev_sales AS sales_diff FROM sales_with_lag;
-3. Data Transformation
--- Table Creation
-CREATE TABLE fresher.products2 (
- product_id INT PRIMARY KEY,
- product_name VARCHAR(100),
- category VARCHAR(50),
- sales_amount INT
-);
--- Sample Data Insert
-INSERT INTO fresher.products2 (product_id, product_name, category, sales_amount) VALUES
-(1, 'Laptop', 'Electronics', 5000),
-(2, 'Smartphone', 'Electronics', 7000),
-(3, 'Refrigerator', 'Appliances', 3000),
-(4, 'Oven', 'Appliances', 1500),
-(5, 'T-shirt', 'Clothing', 800),
-(6, 'Jeans', 'Clothing', 1200);
--- Aggregate + CASE
-SELECT
- category,
- SUM(sales_amount) AS total_sales,
- CASE
- WHEN SUM(sales_amount) > 10000 THEN 'High Sales'
- WHEN SUM(sales_amount) BETWEEN 5000 AND 10000 THEN 'Moderate Sales'
- ELSE 'Low Sales'
- END AS sales_category
-FROM fresher.products2
-GROUP BY category;
--- Running Total
-SELECT *,
- SUM(sales_amount) OVER (ORDER BY product_id) AS running_total
-FROM fresher.products2;
-4. Security Considerations
--- Create User
-CREATE USER 'report_user'@'localhost' IDENTIFIED BY 'StrongP@ss123'
+This project demonstrates practical SQL techniques for optimizing query performance, handling data efficiently, and transforming it for analytical purposes. Ideal for beginners to intermediate learners preparing for SQL interviews or real-world data analysis tasks.
+
+---
+
+## 🔧 Technologies Used
+
+- SQL (MySQL / PostgreSQL)
+- Indexing Techniques
+- Window Functions
+- Common Table Expressions (CTE)
+- Aggregation & CASE Logic
+- Execution Plans
+
+---
+
+## ✅ Topics Covered
+
+### 1️⃣ Query Optimization Techniques
+- ✅ Indexing (`CREATE INDEX`)
+- ✅ Composite Indexing (`CREATE INDEX idx_name_city ON (name, city)`)
+- ✅ Query filtering using `WHERE`
+- ✅ Checking query execution with `EXPLAIN`
+
+### 2️⃣ Data Manipulation (DML)
+- ✅ Table creation and inserting data
+- ✅ Using `LAG()` to calculate previous month's sales
+- ✅ Calculating sales difference using Window Functions
+- ✅ Common Table Expression (CTE) with LAG()
+
+### 3️⃣ Data Transformation
+- ✅ Aggregate Functions: `SUM()`, `COUNT()`, etc.
+- ✅ `CASE` statement for conditional sales category
+- ✅ Cumulative Total with `SUM() OVER(ORDER BY ...)`
+
+### 4️⃣ Security Considerations
+- ✅ Creating a secure database user
+  ```sql
+  CREATE USER 'report_user'@'localhost' IDENTIFIED BY 'StrongP@ss123';
