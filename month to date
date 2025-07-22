@@ -1,0 +1,30 @@
+1.Month of date (MTD)
+
+CREATE TABLE fresher.sales (
+    id INT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    sale_amount DECIMAL(10, 2),
+    sale_date DATE
+);
+
+
+INSERT INTO fresher.sales (id, customer_name, sale_amount, sale_date) VALUES
+(1, 'Rahim', 1200.00, '2025-07-01'),
+(2, 'Karim', 800.50, '2025-07-05'),
+(3, 'Sumaiya', 1500.00, '2025-07-10'),
+(4, 'Jannat', 950.75, '2025-07-20'),
+(5, 'Tanim', 300.00, '2025-06-28'); -- আগের মাসের
+
+select * 
+from fresher.sales;
+
+--- month to date 
+select * 
+from fresher.sales
+where sale_date >= date_format(current_date(), '%Y-%m-01')
+and sale_date <=current_date();
+
+
+
+select current_date();
+select date_format(current_date(), '%Y-%m-01')
