@@ -1,0 +1,6 @@
+2.Year-to-Date (YTD)
+
+select * 
+from fresher.sales
+where sale_date >= date_format(current_date(),'%Y-01-01')
+and sale_date <= current_date()
