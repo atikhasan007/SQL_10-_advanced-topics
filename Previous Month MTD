@@ -1,0 +1,21 @@
+3.Previous Month MTD
+
+
+select * 
+from fresher.sales
+where sale_date >= date_format(current_date(),'%Y-01-01')
+and sale_date <= current_date();
+
+-- Previous Month MTD 
+select * 
+from fresher.sales
+where sale_date >= date_format(date_sub(current_date(), interval 1 month), '%Y-%m-01')
+and sale_date <= last_day(date_sub(current_date(), interval 1 month))
+and day(sale_date) <= day(current_date());
+
+select day(sale_date) as sales_date,
+day(current_date()) as current_dates
+from fresher.sales;
+
+
+select last_day(date_sub(current_date(), interval 1 month));
